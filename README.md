@@ -2,7 +2,13 @@
 
 Provide a synchronous execution environment for asynchronous functions to eliminate async side effects.
 
-DEMO:
+# Install
+
+```bash
+npm install run-sync
+```
+
+# Usage
 
 ```js
 import { runSync } from 'run-sync'
