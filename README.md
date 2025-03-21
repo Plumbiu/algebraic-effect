@@ -1,17 +1,17 @@
-# run-sync
+# algebra-effect
 
 Provide a synchronous execution environment for asynchronous functions to eliminate async side effects.
 
 # Install
 
 ```bash
-npm install run-sync
+npm install algebra-effect
 ```
 
 # Usage
 
 ```js
-import { runSync } from 'run-sync'
+import { runSync } from 'algebra-effect'
 
 const asyncFunction = async () => {
   return 1
