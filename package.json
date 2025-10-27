@@ -1,8 +1,9 @@
 {
   "name": "algebraic-effect",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Provide a synchronous execution environment for asynchronous functions.",
   "main": "dist/index.mjs",
+  "type": "module",
   "files": [
     "dist"
   ],
@@ -30,6 +31,7 @@
   "devDependencies": {
     "@types/node": "^22.13.10",
     "tsup": "^8.4.0",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "vitest": "^4.0.3"
   }
 }

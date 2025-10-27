@@ -11,22 +11,29 @@ npm install algebraic-effect
 # Usage
 
 ```js
-import { runSync } from 'algebraic-effect'
-
-const asyncFunction = async () => {
+const asyncFn1 = async () => {
   return 1
 }
 
-const run = () => {
-  const n = asyncFunction()
-  console.log(n) // log 1, not Promise { 1 }
+const asyncFn2 = async () => {
+  return 2
 }
 
-runSync(run, [asyncFunction])
-// Get the data
-const data = await runSync(run, [asyncFunction])
+const main = () => {
+  const data1 = asyncFn1()
+  const data2 = asyncFn2()
+  return data1 + data2
+}
+
+const data = await runSync(main, [asyncFn1, asyncFn2])
 console.log(data)
 /*
-[{ status: 'fulfilled', value: 1 }]
+[
+  3,
+  [
+    { status: 'fulfilled', value: 1, name: 'asyncFn1' },
+    { status: 'fulfilled', value: 2, name: 'asyncFn2' }
+  ]
+]
 */
 ```
