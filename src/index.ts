@@ -1,26 +1,50 @@
+import { Fn } from './types'
+import { isFunction } from './utils'
+
 enum Status {
   Pending = 'pending',
   Fulfilled = 'fulfilled',
   Rejected = 'rejected',
 }
 
-type StatusType = Status
-type Fn = (...args: any[]) => any
-
 interface Data<T> {
-  status: StatusType[keyof StatusType]
+  status: Status[keyof Status]
   value: T | null
   name: string
+  hasError?: boolean
 }
 
-export function runSync<TBody extends Fn, TFns extends Fn[]>(
+// Fallback 相关类型
+interface FallbackConfig<T extends Fn> {
+  fn: T
+  fallback: Awaited<ReturnType<T>> | T
+}
+
+type FallbackFunction<T extends Fn> =
+  | T
+  | [T, Awaited<ReturnType<T>>]
+  | FallbackConfig<T>
+
+function extractFallbackFunction<T extends Fn>(
+  fallbackFn: FallbackFunction<T>,
+) {
+  if (Array.isArray(fallbackFn)) {
+    return { fn: fallbackFn[0], fallback: fallbackFn[1] }
+  }
+  if (isFunction(fallbackFn)) {
+    return { fn: fallbackFn }
+  }
+  return { fn: fallbackFn.fn, fallback: fallbackFn.fallback }
+}
+
+export function runSync<TBody extends Fn, TFns extends FallbackFunction<any>[]>(
   body: TBody,
   asyncFns: TFns,
-): Promise<
-  [ReturnType<TBody>, { [K in keyof TFns]: Data<Awaited<ReturnType<TFns[K]>>> }]
-> {
+): Promise<[ReturnType<TBody>, Data<any>[]]> {
   return new Promise((resolve, reject) => {
-    const data: Data<any>[] = asyncFns.map((fn) => ({
+    const extractedFns = asyncFns.map(extractFallbackFunction)
+
+    const data: Data<any>[] = extractedFns.map(({ fn }) => ({
       status: Status.Pending,
       value: null,
       name: fn.name,
@@ -29,7 +53,7 @@ export function runSync<TBody extends Fn, TFns extends Fn[]>(
     let processData: ReturnType<TBody> | null = null
     let pendingPromise: Promise<any> | null = null
 
-    const syncFns = asyncFns.map((fn, i) => {
+    const syncFns = extractedFns.map(({ fn, fallback }, i) => {
       return (...args: any[]) => {
         const cache = data[i] as Data<any>
         if (cache.status === Status.Fulfilled) {
@@ -46,9 +70,10 @@ export function runSync<TBody extends Fn, TFns extends Fn[]>(
             return value
           })
           .catch((err: any) => {
-            cache.status = Status.Rejected
-            cache.value = err
-            throw err
+            cache.hasError = true
+            cache.status = Status.Fulfilled
+            cache.value = isFunction(fallback) ? fallback(err) : fallback
+            return cache.value
           })
 
         pendingPromise = promise
@@ -57,7 +82,7 @@ export function runSync<TBody extends Fn, TFns extends Fn[]>(
     })
 
     const fn = new Function(
-      ...asyncFns.map((fn) => fn.name),
+      ...extractedFns.map(({ fn }) => fn.name),
       `return (${body.toString()})()`,
     )
 
@@ -77,10 +102,7 @@ export function runSync<TBody extends Fn, TFns extends Fn[]>(
 
     processEffect()
       .then(() => {
-        resolve([
-          processData!,
-          data as { [K in keyof TFns]: Data<Awaited<ReturnType<TFns[K]>>> },
-        ])
+        resolve([processData!, data])
       })
       .catch(reject)
   })

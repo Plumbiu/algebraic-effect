@@ -75,3 +75,28 @@ test('arguments', async () => {
     ],
   ])
 })
+
+test('fallback', async () => {
+  const asyncFn1 = async () => {
+    throw new Error()
+  }
+
+  const asyncFn2 = async () => {
+    return 2
+  }
+
+  const main = () => {
+    return (asyncFn1() as unknown as number) + (asyncFn2() as unknown as number)
+  }
+  const data = await runSync(main, [
+    [asyncFn1, 1],
+    { fn: asyncFn2, fallback: () => 2 },
+  ])
+  expect(data).toEqual([
+    3,
+    [
+      { status: 'fulfilled', value: 1, name: 'asyncFn1', hasError: true },
+      { status: 'fulfilled', value: 2, name: 'asyncFn2' },
+    ],
+  ])
+})
