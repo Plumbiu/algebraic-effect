@@ -1,5 +1,7 @@
 # algebraic-effect
 
+Highly recommend reading [Algebraic Effects for the Rest of Us](https://overreacted.io/algebraic-effects-for-the-rest-of-us)
+
 Provide a synchronous execution environment for asynchronous functions to eliminate async side effects.
 
 # Install
