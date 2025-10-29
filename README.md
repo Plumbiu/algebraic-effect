@@ -13,6 +13,8 @@ npm install algebraic-effect
 ## Simplest usage
 
 ```js
+import { runSync } from 'algebraic-effect'
+
 const asyncFn1 = () => {
   return Promise.resolve(1)
 }
@@ -35,6 +37,8 @@ expect(data).toEqual([
 ## fallback usage
 
 ```ts
+import { runSync } from 'algebraic-effect'
+
 const asyncFn1 = async () => {
   throw new Error()
 }
