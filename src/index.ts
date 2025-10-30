@@ -67,13 +67,11 @@ export function runSync<TBody extends Fn, TFns extends FallbackFunction<any>[]>(
           .then((value: any) => {
             cache.status = Status.Fulfilled
             cache.value = value
-            return value
           })
           .catch((err: any) => {
             cache.hasError = true
             cache.status = Status.Fulfilled
             cache.value = isFunction(fallback) ? fallback(err) : fallback
-            return cache.value
           })
 
         pendingPromise = promise
@@ -94,8 +92,6 @@ export function runSync<TBody extends Fn, TFns extends FallbackFunction<any>[]>(
           await pendingPromise
           pendingPromise = null
           await processEffect()
-        } else {
-          reject(error)
         }
       }
     }
