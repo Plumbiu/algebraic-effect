@@ -37,3 +37,5 @@ twid.config.json
 next-env.d.ts
 /index.js
 benchlib/result.json
+
+/test.ts

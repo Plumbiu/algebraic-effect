@@ -51,7 +51,6 @@ export function runSync<TBody extends Fn, TFns extends FallbackFunction<any>[]>(
     }))
 
     let processData: ReturnType<TBody> | null = null
-    let pendingPromise: Promise<any> | null = null
 
     const syncFns = extractedFns.map(({ fn, fallback }, i) => {
       return (...args: any[]) => {
@@ -74,7 +73,6 @@ export function runSync<TBody extends Fn, TFns extends FallbackFunction<any>[]>(
             cache.value = isFunction(fallback) ? fallback(err) : fallback
           })
 
-        pendingPromise = promise
         throw promise
       }
     })
@@ -89,8 +87,7 @@ export function runSync<TBody extends Fn, TFns extends FallbackFunction<any>[]>(
         processData = fn(...syncFns)
       } catch (error: any) {
         if (error instanceof Promise) {
-          await pendingPromise
-          pendingPromise = null
+          await error
           await processEffect()
         }
       }

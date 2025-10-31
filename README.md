@@ -1,6 +1,6 @@
 # algebraic-effect
 
-Highly recommend reading [Algebraic Effects for the Rest of Us](https://overreacted.io/algebraic-effects-for-the-rest-of-us)
+Highly recommended reading: [Algebraic Effects for the Rest of Us](https://overreacted.io/algebraic-effects-for-the-rest-of-us)
 
 # Install
 
@@ -49,7 +49,7 @@ const main = () => {
   return (asyncFn1() as unknown as number) + (asyncFn2() as unknown as number)
 }
 const data = await runSync(main, [
-  // if asyncFn1 throw error, fallback is 1
+  // if asyncFn1 throws an error, fallback is 1
   [asyncFn1, 1],
   { fn: asyncFn2, fallback: (err) => 2 },
 ])
@@ -64,16 +64,16 @@ expect(data).toEqual([
 
 # Some error usages
 
-You can examine the source code. I've constructed a new execution function using `new Function` and rebuilt the user-passed async function. However, some external variables are difficult to access through `new Function`, which has significant limitations. But in fact, if you understand the source code, you'll easily see that this is a compromise I made for user convenience. Any async function can overcome the limitations I mentioned by rewriting it according to the source code's approach."
+You can examine the source code. I've constructed a new execution function using `new Function` and rebuilt the user-passed async function. However, some external variables are difficult to access through `new Function`, which has significant limitations. But in fact, if you understand the source code, you'll easily see that this is a compromise I made for user convenience. Any async function can overcome the limitations I mentioned by rewriting it according to the source code's approach.
 
 1. First Parameter Must Be a Function Reference (Not a Function Call)
    ```ts
-   runSync(() => main(), []) // ❎
+   runSync(() => main(), []) // ❌
    runSync(main, []) // ✅
    ```
 2. Functions Cannot Access External Variables (Must Be Pure Functions)
    ```ts
-   // ❎
+   // ❌
    const a = 1
    const main = () => {
      return a
@@ -86,7 +86,7 @@ You can examine the source code. I've constructed a new execution function using
    runSync(main, [])
    ```
 
-# How it works?
+# How it works
 
 Let's use a simple example to illustrate. Suppose you want to implement a synchronously executing `syncMain` function:
 
@@ -102,7 +102,7 @@ const syncMain = () => {
 }
 ```
 
-The key to implementation is: **throw the Promise result of asyncFn as an exception, then execute the main function twice**. The first execution throws an exception, and then we execute the main function again in the catch statement. Let's look at the code directly:
+The key to the implementation is: **throw the Promise result of asyncFn as an exception, then execute the main function twice**. The first execution throws an exception, and then we execute the main function again in the catch statement. Let's look at the code directly:
 
 ```ts
 let asyncFn = async () => 1
@@ -117,7 +117,7 @@ const syncMain = () => {
     status: 'pending',
     value: null,
   }
-  // Modify the asyncFn function so that when executed, it throws the promise of the final result
+  // Modify the asyncFn function so that when executed, it throws the promise containing the final result
   asyncFn = () => {
     if (data.status === 'fulfilled') {
       return data.value
@@ -140,13 +140,13 @@ const syncMain = () => {
   }
 
   try {
-    // Since the asyncFn function will throw an exception, this will definitely enter the catch statement
+    // Since the asyncFn function will throw an exception, this will definitely enter the catch block
     main()
   } catch (err) {
     if (err instanceof Promise) {
       // This way, after .then, the result is resolved
       err.then(main, main).finally(() => {
-        // Don't forget to change asyncFn back
+        // Don't forget to restore asyncFn
         asyncFn = prevAsyncFn
       })
     }
