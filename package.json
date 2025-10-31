@@ -1,6 +1,6 @@
 {
   "name": "algebraic-effect",
-  "version": "0.1.1",
+  "version": "0.2.1",
   "description": "Provide a synchronous execution environment for asynchronous functions.",
   "main": "dist/index.mjs",
   "type": "module",
