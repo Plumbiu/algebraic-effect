@@ -37,10 +37,10 @@ function extractFallbackFunction<T extends Fn>(
   return { fn: fallbackFn.fn, fallback: fallbackFn.fallback }
 }
 
-export function runSync<TBody extends Fn, TFns extends FallbackFunction<any>[]>(
-  body: TBody,
-  asyncFns: TFns,
-): Promise<[ReturnType<TBody>, Data<any>[]]> {
+export function withSync<
+  TBody extends Fn,
+  TFns extends FallbackFunction<any>[],
+>(body: TBody, asyncFns: TFns): Promise<[ReturnType<TBody>, Data<any>[]]> {
   return new Promise((resolve, reject) => {
     const extractedFns = asyncFns.map(extractFallbackFunction)
 

@@ -1,11 +1,11 @@
-# algebraic-effect
+# syncify-js
 
 Highly recommended reading: [Algebraic Effects for the Rest of Us](https://overreacted.io/algebraic-effects-for-the-rest-of-us)
 
 # Install
 
 ```bash
-npm install algebraic-effect
+npm install syncify-js
 ```
 
 # Usage
@@ -13,7 +13,7 @@ npm install algebraic-effect
 ## Simplest usage
 
 ```js
-import { runSync } from 'algebraic-effect'
+import { withSync } from 'syncify-js'
 
 const asyncFn1 = () => {
   return Promise.resolve(1)
@@ -24,7 +24,7 @@ const asyncFn2 = async () => {
 const main = () => {
   return asyncFn1() + asyncFn2()
 }
-const data = await runSync(main, [asyncFn1, asyncFn2])
+const data = await withSync(main, [asyncFn1, asyncFn2])
 expect(data).toEqual([
   3,
   [
@@ -37,7 +37,7 @@ expect(data).toEqual([
 ## fallback usage
 
 ```ts
-import { runSync } from 'algebraic-effect'
+import { withSync } from 'syncify-js'
 
 const asyncFn1 = async () => {
   throw new Error()
@@ -48,7 +48,7 @@ const asyncFn2 = async () => {
 const main = () => {
   return (asyncFn1() as unknown as number) + (asyncFn2() as unknown as number)
 }
-const data = await runSync(main, [
+const data = await withSync(main, [
   // if asyncFn1 throws an error, fallback is 1
   [asyncFn1, 1],
   { fn: asyncFn2, fallback: (err) => 2 },
@@ -68,8 +68,8 @@ You can examine the source code. I've constructed a new execution function using
 
 1. First Parameter Must Be a Function Reference (Not a Function Call)
    ```ts
-   runSync(() => main(), []) // ❌
-   runSync(main, []) // ✅
+   withSync(() => main(), []) // ❌
+   withSync(main, []) // ✅
    ```
 2. Functions Cannot Access External Variables (Must Be Pure Functions)
    ```ts
@@ -78,12 +78,12 @@ You can examine the source code. I've constructed a new execution function using
    const main = () => {
      return a
    }
-   runSync(main, [])
+   withSync(main, [])
    // ✅
    const main = () => {
      return 1
    }
-   runSync(main, [])
+   withSync(main, [])
    ```
 
 # How it works
