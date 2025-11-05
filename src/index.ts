@@ -9,22 +9,21 @@ enum Status {
 
 interface Data<T> {
   status: Status[keyof Status]
-  value: T | null
+  value: T
   name: string
 }
 
-// Fallback 相关类型
-interface FallbackConfig<T extends Fn> {
-  fn: T
-  onError: Awaited<ReturnType<T>> | T
-}
+type FallbackFunction<TBody extends Fn, TBodyReturn = ReturnType<TBody>> =
+  | TBody
+  | [TBody, (err: any) => Awaited<TBodyReturn>]
+  | {
+      fn: TBody
+      onError: (err: any) => Awaited<TBodyReturn>
+    }
 
-type FallbackFunction<T extends Fn> =
-  | T
-  | [T, Awaited<ReturnType<T>>]
-  | FallbackConfig<T>
-
-function extractFallbackFunction<T extends Fn>(onErrorFn: FallbackFunction<T>) {
+function extractFallbackFunction<TBody extends Fn>(
+  onErrorFn: FallbackFunction<TBody>,
+) {
   if (Array.isArray(onErrorFn)) {
     return { fn: onErrorFn[0], onError: onErrorFn[1] }
   }
@@ -36,16 +35,22 @@ function extractFallbackFunction<T extends Fn>(onErrorFn: FallbackFunction<T>) {
 
 export function withSync<
   TBody extends Fn,
-  TFns extends FallbackFunction<any>[],
->(body: TBody, asyncFns: TFns): Promise<[ReturnType<TBody>, Data<any>[]]> {
+  TAsyncBody extends Fn,
+  TAsyncBodyReturnType = Awaited<ReturnType<TAsyncBody>>,
+>(
+  body: TBody,
+  asyncFns: FallbackFunction<TAsyncBody>[],
+): Promise<[ReturnType<TBody>, Data<TAsyncBodyReturnType | null>[]]> {
   return new Promise((resolve, reject) => {
     const extractedFns = asyncFns.map(extractFallbackFunction)
 
-    const data: Data<any>[] = extractedFns.map(({ fn }) => ({
-      status: Status.Pending,
-      value: null,
-      name: fn.name,
-    }))
+    const data: Data<TAsyncBodyReturnType | null>[] = extractedFns.map(
+      ({ fn }) => ({
+        status: Status.Pending,
+        value: null,
+        name: fn.name,
+      }),
+    )
 
     let processData: ReturnType<TBody> | null = null
 
@@ -66,7 +71,7 @@ export function withSync<
           })
           .catch((err: any) => {
             cache.status = Status.Rejected
-            cache.value = isFunction(onError) ? onError(err) : onError
+            cache.value = isFunction(onError) ? onError(err) : err
           })
 
         throw promise

@@ -77,11 +77,11 @@ test('arguments', async () => {
 })
 
 test('onError', async () => {
-  const asyncFn1 = async () => {
+  const asyncFn1 = async (): Promise<number> => {
     throw new Error()
   }
 
-  const asyncFn2 = async () => {
+  const asyncFn2 = async (): Promise<number> => {
     throw new Error()
   }
 
@@ -89,7 +89,7 @@ test('onError', async () => {
     return (asyncFn1() as unknown as number) + (asyncFn2() as unknown as number)
   }
   const data = await withSync(main, [
-    [asyncFn1, 1],
+    [asyncFn1, () => 1],
     { fn: asyncFn2, onError: () => 2 },
   ])
   expect(data).toEqual([
