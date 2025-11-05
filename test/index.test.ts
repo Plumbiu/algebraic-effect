@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { runSync } from '../src'
+import { withSync } from '../src'
 
 test('basic', async () => {
   const asyncFn1 = async () => {
@@ -16,7 +16,7 @@ test('basic', async () => {
     return data1 + data2
   }
 
-  const data = await runSync(main, [asyncFn1, asyncFn2])
+  const data = await withSync(main, [asyncFn1, asyncFn2])
   expect(data).toEqual([
     3,
     [
@@ -41,7 +41,7 @@ test('promise', async () => {
     return data1 + data2
   }
 
-  const data = await runSync(main, [asyncFn1, asyncFn2])
+  const data = await withSync(main, [asyncFn1, asyncFn2])
   expect(data).toEqual([
     3,
     [
@@ -66,7 +66,7 @@ test('arguments', async () => {
     return data1 + data2
   }
 
-  const data = await runSync(main, [asyncFn1, asyncFn2])
+  const data = await withSync(main, [asyncFn1, asyncFn2])
   expect(data).toEqual([
     4,
     [
@@ -76,27 +76,27 @@ test('arguments', async () => {
   ])
 })
 
-test('fallback', async () => {
+test('onError', async () => {
   const asyncFn1 = async () => {
     throw new Error()
   }
 
   const asyncFn2 = async () => {
-    return 2
+    throw new Error()
   }
 
   const main = () => {
     return (asyncFn1() as unknown as number) + (asyncFn2() as unknown as number)
   }
-  const data = await runSync(main, [
+  const data = await withSync(main, [
     [asyncFn1, 1],
-    { fn: asyncFn2, fallback: () => 2 },
+    { fn: asyncFn2, onError: () => 2 },
   ])
   expect(data).toEqual([
     3,
     [
       { status: 'fulfilled', value: 1, name: 'asyncFn1', hasError: true },
-      { status: 'fulfilled', value: 2, name: 'asyncFn2' },
+      { status: 'fulfilled', value: 2, name: 'asyncFn2', hasError: true },
     ],
   ])
 })

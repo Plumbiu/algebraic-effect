@@ -15,12 +15,8 @@ npm install syncify-js
 ```js
 import { withSync } from 'syncify-js'
 
-const asyncFn1 = () => {
-  return Promise.resolve(1)
-}
-const asyncFn2 = async () => {
-  return 2
-}
+const asyncFn1 = () => Promise.resolve(1)
+const asyncFn2 = async () => 2
 const main = () => {
   return asyncFn1() + asyncFn2()
 }
@@ -34,7 +30,7 @@ expect(data).toEqual([
 ])
 ```
 
-## fallback usage
+## onError
 
 ```ts
 import { withSync } from 'syncify-js'
@@ -43,21 +39,21 @@ const asyncFn1 = async () => {
   throw new Error()
 }
 const asyncFn2 = async () => {
-  return 2
+  throw new Error()
 }
 const main = () => {
   return (asyncFn1() as unknown as number) + (asyncFn2() as unknown as number)
 }
 const data = await withSync(main, [
-  // if asyncFn1 throws an error, fallback is 1
+  // if asyncFn1 throws an error, the result is 1
   [asyncFn1, 1],
-  { fn: asyncFn2, fallback: (err) => 2 },
+  { fn: asyncFn2, onError: () => 2 },
 ])
 expect(data).toEqual([
   3,
   [
     { status: 'fulfilled', value: 1, name: 'asyncFn1', hasError: true },
-    { status: 'fulfilled', value: 2, name: 'asyncFn2' },
+    { status: 'fulfilled', value: 2, name: 'asyncFn2', hasError: true },
   ],
 ])
 ```

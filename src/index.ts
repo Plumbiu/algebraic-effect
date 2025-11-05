@@ -17,7 +17,7 @@ interface Data<T> {
 // Fallback 相关类型
 interface FallbackConfig<T extends Fn> {
   fn: T
-  fallback: Awaited<ReturnType<T>> | T
+  onError: Awaited<ReturnType<T>> | T
 }
 
 type FallbackFunction<T extends Fn> =
@@ -25,16 +25,14 @@ type FallbackFunction<T extends Fn> =
   | [T, Awaited<ReturnType<T>>]
   | FallbackConfig<T>
 
-function extractFallbackFunction<T extends Fn>(
-  fallbackFn: FallbackFunction<T>,
-) {
-  if (Array.isArray(fallbackFn)) {
-    return { fn: fallbackFn[0], fallback: fallbackFn[1] }
+function extractFallbackFunction<T extends Fn>(onErrorFn: FallbackFunction<T>) {
+  if (Array.isArray(onErrorFn)) {
+    return { fn: onErrorFn[0], onError: onErrorFn[1] }
   }
-  if (isFunction(fallbackFn)) {
-    return { fn: fallbackFn }
+  if (isFunction(onErrorFn)) {
+    return { fn: onErrorFn }
   }
-  return { fn: fallbackFn.fn, fallback: fallbackFn.fallback }
+  return { fn: onErrorFn.fn, onError: onErrorFn.onError }
 }
 
 export function withSync<
@@ -52,7 +50,7 @@ export function withSync<
 
     let processData: ReturnType<TBody> | null = null
 
-    const syncFns = extractedFns.map(({ fn, fallback }, i) => {
+    const syncFns = extractedFns.map(({ fn, onError }, i) => {
       return (...args: any[]) => {
         const cache = data[i] as Data<any>
         if (cache.status === Status.Fulfilled) {
@@ -70,7 +68,7 @@ export function withSync<
           .catch((err: any) => {
             cache.hasError = true
             cache.status = Status.Fulfilled
-            cache.value = isFunction(fallback) ? fallback(err) : fallback
+            cache.value = isFunction(onError) ? onError(err) : onError
           })
 
         throw promise
