@@ -1,6 +1,6 @@
 {
   "name": "syncify-js",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Provide a synchronous execution environment for asynchronous functions.",
   "main": "dist/index.mjs",
   "type": "module",

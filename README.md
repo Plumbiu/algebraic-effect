@@ -52,8 +52,8 @@ const data = await withSync(main, [
 expect(data).toEqual([
   3,
   [
-    { status: 'fulfilled', value: 1, name: 'asyncFn1', hasError: true },
-    { status: 'fulfilled', value: 2, name: 'asyncFn2', hasError: true },
+    { status: 'rejected', value: 1, name: 'asyncFn1' },
+    { status: 'rejected', value: 2, name: 'asyncFn2' },
   ],
 ])
 ```

@@ -11,7 +11,6 @@ interface Data<T> {
   status: Status[keyof Status]
   value: T | null
   name: string
-  hasError?: boolean
 }
 
 // Fallback 相关类型
@@ -53,11 +52,11 @@ export function withSync<
     const syncFns = extractedFns.map(({ fn, onError }, i) => {
       return (...args: any[]) => {
         const cache = data[i] as Data<any>
-        if (cache.status === Status.Fulfilled) {
+        if (
+          cache.status === Status.Fulfilled ||
+          cache.status === Status.Rejected
+        ) {
           return cache.value
-        }
-        if (cache.status === Status.Rejected) {
-          throw cache.value
         }
 
         const promise = fn(...args)
@@ -66,8 +65,7 @@ export function withSync<
             cache.value = value
           })
           .catch((err: any) => {
-            cache.hasError = true
-            cache.status = Status.Fulfilled
+            cache.status = Status.Rejected
             cache.value = isFunction(onError) ? onError(err) : onError
           })
 
